@@ -1,0 +1,7 @@
+folium==0.19.5
+numpy==2.2.5
+paho-mqtt==2.1.0
+pandas==2.2.3
+streamlit==1.45.0
+#streamlit-autorefresh==1.0.1
+streamlit_folium==0.25.0
