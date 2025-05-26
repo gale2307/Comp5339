@@ -41,7 +41,10 @@ def on_connect(client, userdata, connect_flags, reason_code, properties):
     print("Connected with result code", str(reason_code))
     if reason_code == 0:
         print("Connected to broker")
-        client.subscribe("COMP5339/Assignment02/Group07/FuelPrice")
+        try:
+            client.subscribe("COMP5339/Assignment02/Group07/FuelPrice")
+        except Exception as e:
+            print(f"Error unsubscribing: {e}")
     else:
         print("Bad connection, rc =", reason_code)
 
@@ -52,7 +55,7 @@ def on_message(client, userdata, msg):
 def start_mqtt():
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.on_connect, client.on_message = on_connect, on_message
-    client.connect("172.17.34.107", 1883, 60)
+    client.connect("broker.hivemq.com", 1883, 60)  #choose a public server instead of private: 172.17.34.107
     client.loop_forever()
 
 ##############################
