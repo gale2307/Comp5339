@@ -69,3 +69,16 @@ contribution of individual team members, example:
 Submission Deadline
 All Stage 2 deliverables are due by 23:59, Thursday 22 May. Late submissions will incur
 penalties according to university policy.
+
+
+## dashboard.py
+
+To run the dashboard, do:
+```bash
+$ pip install -r requirements.txt
+$ streamlit run dashboard.py
+```
+
+Run section 3 of the COMP5339AS02.ipynb notebook to send MQTT requests for populating dashboard.
+
+Icons for markers are stored in the 'icon' folder.
