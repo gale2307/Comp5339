@@ -200,6 +200,8 @@ def update_fuel_data(fuelpriceAPI, existing_file="integrated_fuel_data.csv", out
     station_map = {
         station["code"]: {
             "ServiceStationName": station.get("name"),
+            "Address": station.get("address"),
+            "Brand": station.get("brand"),
             "Latitude": station.get("location", {}).get("latitude"),
             "Longitude": station.get("location", {}).get("longitude")
         }
@@ -212,8 +214,21 @@ def update_fuel_data(fuelpriceAPI, existing_file="integrated_fuel_data.csv", out
         station_code = price.get("stationcode")
         station_info = station_map.get(station_code)
         if station_info:
+            full_address = station_info["Address"]
+            try:
+                parts = full_address.split(", ")
+                suburb_postcode = parts[-1].rsplit(" ", 2)
+                suburb = suburb_postcode[0]
+                postcode = suburb_postcode[-1]
+            except Exception:
+                suburb, postcode = None, None
+
             new_price_rows.append({
                 "ServiceStationName": station_info["ServiceStationName"],
+                "Address": full_address,
+                "Suburb": suburb,
+                "Postcode": postcode,
+                "Brand": station_info["Brand"],
                 "FuelCode": price.get("fueltype"),
                 "Latitude": station_info["Latitude"],
                 "Longitude": station_info["Longitude"],
@@ -226,7 +241,7 @@ def update_fuel_data(fuelpriceAPI, existing_file="integrated_fuel_data.csv", out
     cleaned_df = clean_and_display_fuel_data(df)
 
     # Step 6: Save updated file
-    cleaned_df.to_csv(output_file, mode='a', index=False)
+    cleaned_df.to_csv(output_file, mode='a', header=False, index=False)
 
     return cleaned_df
 
@@ -285,18 +300,18 @@ def main():
     fuelpriceAPI = FuelPriceCheckAPI(API_KEY, AuthorizationHeader)
 
     # Retrieve and publish current price
-    print("Retrieving Data from API")
+    print("Retrieving Data from API\n")
     cleaned_df = fetch_and_save_fuel_data(fuelpriceAPI)
-    print("Publishing Data to MQTT Broker")
+    print("Publishing Data to MQTT Broker\n")
     publish_data(cleaned_df)
 
     # Periodically check and publish price updates
     while(True):
-        print(f"Sleeping for {POLL_COOLDOWN} seconds")
+        print(f"Sleeping for {POLL_COOLDOWN} seconds\n")
         time.sleep(POLL_COOLDOWN)
-        print("Retrieving Data from API")
+        print("Retrieving Data from API\n")
         updated_df = update_fuel_data(fuelpriceAPI)
-        print("Publishing Data to MQTT Broker")
+        print("Publishing Data to MQTT Broker\n")
         publish_data(updated_df)
 
 
