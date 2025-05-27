@@ -87,7 +87,7 @@ def start_mqtt_thread_target(message_q_for_thread): # NOTE: Target function for 
 
     print(f"[{time.strftime('%H:%M:%S')}] MQTT: start_mqtt thread trying to connect...")
     try:
-        client.connect("broker.hivemq.com", 1883, 60) # Connect to MQTT broker
+        client.connect("172.17.34.107", 1883, 60) # Connect to MQTT broker
         client.loop_forever() # Blocking loop to process network traffic and dispatch callbacks
     except Exception as e:
         print(f"[{time.strftime('%H:%M:%S')}] MQTT: Connection/loop error in start_mqtt: {e}")
@@ -135,7 +135,7 @@ current_time_queue_check = time.strftime('%H:%M:%S')
 # NOTE: Log the current size of the message queue (referenced from session_state).
 print(f"[{current_time_queue_check}] Main: Checking st.session_state.message_queue. Current size: {main_thread_mq.qsize()}")
 messages_processed_count = 0
-MAX_MESSAGES_PER_RUN = 200 # Limit the number of messages processed per rerun to prevent long blocking.
+MAX_MESSAGES_PER_RUN = 500 # Limit the number of messages processed per rerun to prevent long blocking.
 
 # Process messages from the queue until it's empty or the processing limit is reached.
 while not main_thread_mq.empty() and messages_processed_count < MAX_MESSAGES_PER_RUN:
@@ -233,11 +233,9 @@ if markers_added_to_map == 0 and len(st.session_state.get('stations', {})) > 0 a
 current_map_center = st.session_state.get('center', CENTER_START)
 current_map_zoom = st.session_state.get('zoom', 8)
 m = folium.Map(location=current_map_center, zoom_start=current_map_zoom)
-m.add_child(fg) # Add the FeatureGroup (with markers) to the map.
 
 # Render the map using st_folium.
-# A fixed key "fuel_map" ensures this component is updated rather than recreated.
-map_render_data = st_folium(m, key="fuel_map", height=600, width=1200, returned_objects=["last_center", "last_zoom"])
+map_render_data = st_folium(m, key="fuel_map", feature_group_to_add=fg, height=600, width=1200, returned_objects=["last_center", "last_zoom"])
 
 # If the user interacts with the map (pans or zooms), update session_state to preserve their view.
 if map_render_data and map_render_data.get("last_center") and map_render_data.get("last_zoom"):
