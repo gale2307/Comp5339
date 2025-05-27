@@ -192,9 +192,11 @@ def update_fuel_data(fuelpriceAPI, existing_file="integrated_fuel_data.csv", out
     # Step 1: Load existing data
     # existing_df = pd.read_csv(existing_file)
 
-    # Step 2: Fetch new data
+    # Step 2: Fetch new data, return early if no new data
     response = fuelpriceAPI.getNewFuelPrice()
     new_data_json = response.json()
+    if not new_data_json.get("stations", []):
+        return pd.DataFrame()
 
     # Step 3: Extract station mapping
     station_map = {
@@ -295,24 +297,27 @@ def publish_data(df):
     client.disconnect()
 
 def main():
-    print("Start Data Stream")
+    print("Start data stream")
     # Construct API client class
     fuelpriceAPI = FuelPriceCheckAPI(API_KEY, AuthorizationHeader)
 
     # Retrieve and publish current price
-    print("Retrieving Data from API\n")
+    print("Retrieving data from API\n")
     cleaned_df = fetch_and_save_fuel_data(fuelpriceAPI)
-    print("Publishing Data to MQTT Broker\n")
+    print("Publishing data to MQTT Broker\n")
     publish_data(cleaned_df)
 
     # Periodically check and publish price updates
     while(True):
         print(f"Sleeping for {POLL_COOLDOWN} seconds\n")
         time.sleep(POLL_COOLDOWN)
-        print("Retrieving Data from API\n")
+        print("Retrieving data from API\n")
         updated_df = update_fuel_data(fuelpriceAPI)
-        print("Publishing Data to MQTT Broker\n")
-        publish_data(updated_df)
+        if updated_df.empty:
+            print("No updates to be published\n")
+        else:
+            print("Publishing data to MQTT Broker\n")
+            publish_data(updated_df)
 
 
 if __name__ == "__main__":
