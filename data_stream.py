@@ -8,14 +8,15 @@ import paho.mqtt.client as mqtt
 
 # For Generate Unique Transaction Id for accesing API
 import uuid
-
 import config_secret
 
+# Constants
 API_KEY = config_secret.API_KEY
 AuthorizationHeader = config_secret.AuthorizationHeader
 POLL_COOLDOWN = 60
 
 
+# FuelPrice API Client Class Definition
 class FuelPriceCheckAPI:
     def __init__(self, API_KEY, AuthorizationHeader):
         self.url_base = "https://api.onegov.nsw.gov.au" # Base Url
@@ -97,6 +98,7 @@ class FuelPriceCheckAPI:
 
         return response
 
+# Data Retrieval, Integration, and Cleaning Functions
 def clean_and_display_fuel_data(df, column_width=70):
     # Drop rows with missing critical information
     df = df.dropna(subset=["ServiceStationName", "FuelCode", "PriceUpdatedDate", "Latitude", "Longitude", "Price"])
@@ -247,31 +249,19 @@ def update_fuel_data(fuelpriceAPI, existing_file="integrated_fuel_data.csv", out
 
     return cleaned_df
 
-def on_connect(client, userdata, connect_flags, reason_code, properties):
-    print("Connected with result code", str(reason_code))
-    # Subscribe as soon as we connect
-    # client.subscribe("COMP5339/Assignment02/Group07/FuelPrice")
-
-def on_message(client, userdata, msg):
-    print("Message received")
-    # print(json.loads(msg.payload))
-
+# Data Publishing Function
 def publish_data(df):
-    # 1. Retrieve cleaned data
-    # df = pd.read_csv("integrated_fuel_data.csv")
-    
-    # 2. Create client and attach callbacks
+    # 1. Create client
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-    #client.on_connect = on_connect
-    #client.on_message = on_message
+
     
-    # 3. Connect to broker
+    # 2. Connect to broker
     client.connect("172.17.34.107", 1883, keepalive=60)
     
-    # 4. Start the network loop in a background thread
+    # 3. Start the network loop in a background thread
     client.loop_start()
     
-    # 5. Publish periodically
+    # 4. Publish periodically
     for row in df.itertuples():
     
         data = {
@@ -292,7 +282,7 @@ def publish_data(df):
     
         time.sleep(0.1)
     
-    # 6. Clean up
+    # 5. Clean up
     client.loop_stop()
     client.disconnect()
 
